@@ -1,3 +1,6 @@
+import numpy as np
+import random
+
 class Individuo:
     def __init__(self, value, changes, pred, fitness=None):
         self.value = value
@@ -148,63 +151,6 @@ class GP:
             self.iterate()
             best = self.find_best()
             if best.fitness == 5.0:
-                # stop condition
                 break
         best = self.find_best()
         return best.value
-        
-    def plot_ecgs(original_ecg, cf_ecg, label_leads = ["DI", "DII", "DIII", "AVL", "AVF", "AVR", "V1", "V2", "V3", "V4", "V5", "V6"]):
-        fig = plt.figure(figsize=(12, 45))
-        ax1 = fig.add_subplot(12, 1, 1)
-        ax2 = fig.add_subplot(12, 1, 2, sharex=ax1)
-        ax3 = fig.add_subplot(12, 1, 3, sharex=ax1)
-        ax4 = fig.add_subplot(12, 1, 4, sharex=ax1)
-        ax5 = fig.add_subplot(12, 1, 5, sharex=ax1)
-        ax6 = fig.add_subplot(12, 1, 6, sharex=ax1)
-        ax7 = fig.add_subplot(12, 1, 7, sharex=ax1)
-        ax8 = fig.add_subplot(12, 1, 8, sharex=ax1)
-        ax9 = fig.add_subplot(12, 1, 9, sharex=ax1)
-        ax10 = fig.add_subplot(12, 1, 10, sharex=ax1)
-        ax11 = fig.add_subplot(12, 1, 11, sharex=ax1)
-        ax12 = fig.add_subplot(12, 1, 12, sharex=ax1)
-    
-        ax1.plot(cf_ecg[0], c='r', label='counterfactual')
-        ax2.plot(cf_ecg[1], c='r', label='counterfactual')
-        ax3.plot(cf_ecg[2], c='r', label='counterfactual')
-        ax4.plot(cf_ecg[3], c='r', label='counterfactual')
-        ax5.plot(cf_ecg[4], c='r', label='counterfactual')
-        ax6.plot(cf_ecg[5], c='r', label='counterfactual')
-        ax7.plot(cf_ecg[6], c='r', label='counterfactual')
-        ax8.plot(cf_ecg[7], c='r', label='counterfactual')
-        ax9.plot(cf_ecg[8], c='r', label='counterfactual')
-        ax10.plot(cf_ecg[9], c='r', label='counterfactual')
-        ax11.plot(cf_ecg[10], c='r', label='counterfactual')
-        ax12.plot(cf_ecg[11], c='r', label='counterfactual')
-    
-        ax1.plot(original_ecg[0], c='b', label='original', alpha = 0.65)
-        ax2.plot(original_ecg[1], c='b', label='original', alpha = 0.65)
-        ax3.plot(original_ecg[2], c='b', label='original', alpha = 0.65)
-        ax4.plot(original_ecg[3], c='b', label='original', alpha = 0.65)
-        ax5.plot(original_ecg[4], c='b', label='original', alpha = 0.65)
-        ax6.plot(original_ecg[5], c='b', label='original', alpha = 0.65)
-        ax7.plot(original_ecg[6], c='b', label='original', alpha = 0.65)
-        ax8.plot(original_ecg[7], c='b', label='original', alpha = 0.65)
-        ax9.plot(original_ecg[8], c='b', label='original', alpha = 0.65)
-        ax10.plot(original_ecg[9], c='b', label='original', alpha = 0.65)
-        ax11.plot(original_ecg[10], c='b', label='original', alpha = 0.65)
-        ax12.plot(original_ecg[11], c='b', label='original', alpha = 0.65)
-    
-        ax1.set_title(label_leads[0])
-        ax2.set_title(label_leads[1])
-        ax3.set_title(label_leads[2])
-        ax4.set_title(label_leads[3])
-        ax5.set_title(label_leads[4])
-        ax6.set_title(label_leads[5])
-        ax7.set_title(label_leads[6])
-        ax8.set_title(label_leads[7])
-        ax9.set_title(label_leads[8])
-        ax10.set_title(label_leads[9])
-        ax11.set_title(label_leads[10])
-        ax12.set_title(label_leads[11])
-    
-        plt.show()
