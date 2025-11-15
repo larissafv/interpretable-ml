@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Interpretable ML — Home</title>
+    <meta name="description" content="Explore and run interpretability methods." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/home.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand" aria-label="Project brand">
+          <span class="brand-name">Interpretable ML</span>
+        </div>
+        <nav class="top-nav" aria-label="Primary">
+          <a class="nav-link" href="/methods-descriptions">Methods details</a>
+          <a class="nav-link" href="/instructions">User guide</a>
+          <a class="nav-link" href="#about">About us</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="content" class="site-main">
+      <!-- Intro / Hero -->
+      <section id="about" class="hero">
+        <div class="container hero-inner">
+          <div class="hero-copy">
+            <h1 class="hero-title">Understand your model</h1>
+            <p class="hero-subtitle">
+              This interface exposes a set of model-agnostic interpretability methods created to
+              work only with time series data (multivariate or univariate). Use them to explain
+              individual predictions, assess global feature importance, or explore counterfactuals
+              that change decisions.
+            </p>
+          </div>
+          <div class="hero-copy">
+            <div class="hero-bullets" role="list" aria-label="Available method categories">
+              <div class="bullet" role="listitem">Global surrogate models</div>
+              <div class="bullet" role="listitem">Per-point importance</div>
+              <div class="bullet" role="listitem">Counterfactual explanations</div>
+              <div class="bullet" role="listitem">LIME</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Methods grid -->
+      <section id="methods" class="methods">
+        <div class="container">
+          <h2 class="section-title">Choose an interpretability method</h2>
+          <p class="section-sub">Pick one to proceed. You can adjust inputs and parameters on the next step.</p>
+
+          <div class="cards" role="list">
+            <!-- Global Surrogate -->
+            <article class="card method" role="listitem">
+              <div class="card-badge">Global</div>
+              <h3 class="card-title">Global Surrogate</h3>
+              <p class="card-desc">
+                Train an interpretable surrogate (e.g., decision tree) to mimic the
+                black-box model and expose global decision logic.
+              </p>
+              <ul class="card-points">
+                <li>Model-level understanding</li>
+                <li>Straightforward</li>
+                <li>Fast and flexible</li>
+              </ul>
+              <a class="button" href="/methods/global-surrogate" data-method="global_surrogate" aria-label="Select Global Surrogate">Use Global Surrogate</a>
+            </article>
+
+            <!-- PPI -->
+            <article class="card method" role="listitem">
+              <div class="card-badge">Local</div>
+              <h3 class="card-title">Per-point importance</h3>
+              <p class="card-desc">
+                Compute local feature importance by perturbing
+                individual points on a single instance and measuring prediction change.
+              </p>
+              <ul class="card-points">
+                <li>Faithful to the model</li>
+                <li>Intuitive</li>
+                <li>Contrastive</li>
+              </ul>
+              <a class="button" href="/methods/pfi-local" data-method="pfi_local" aria-label="Select PPI Local">Use PPI Local</a>
+            </article>
+
+            <!-- Counterfactual Explanations -->
+            <article class="card method" role="listitem">
+              <div class="card-badge">Local</div>
+              <h3 class="card-title">Counterfactual Explanations</h3>
+              <p class="card-desc">
+                Generate changed versions of an instance that alter the
+                model's prediction to a desired class.
+              </p>
+              <ul class="card-points">
+                <li>Targeted outcome exploration</li>
+                <li>Actionable insights</li>
+                <li>Constraint-aware search</li>
+              </ul>
+              <a class="button" href="/methods/counterfactual-explanations" data-method="counterfactual_explanations" aria-label="Select Counterfactual Explanations">Use Counterfactuals</a>
+            </article>
+
+            <!-- Counterfactual Explanation with PPI (hybrid) -->
+            <article class="card method" role="listitem">
+              <div class="card-badge">Local</div>
+              <h3 class="card-title">Counterfactual Explanation with Per-point importance</h3>
+              <p class="card-desc">
+                Combine counterfactual search with per-point importance to explain how
+                small perturbations to single points affect model decisions.
+              </p>
+              <ul class="card-points">
+                <li>Per-point importance for each class</li>
+                <li>Targeted counterfactual generation</li>
+                <li>Optimized search</li>
+              </ul>
+              <a class="button" href="/methods/counterfactual-with-pfi" data-method="counterfactual_with_pfi" aria-label="Select Counterfactual Explanation with PPI Local">Use Counterfactual + PPI</a>
+            </article>
+
+            <!-- LIME -->
+            <article class="card method" role="listitem">
+              <div class="card-badge">Local</div>
+              <h3 class="card-title">Local interpretable model-agnostic explanations (LIME)</h3>
+              <p class="card-desc">
+                Explain an individual prediction by learning a simple, local surrogate
+                model around a specific instance via perturbations.
+              </p>
+              <ul class="card-points">
+                <li>Instance-level explanations</li>
+                <li>Straightforward</li>
+                <li>Fast and flexible</li>
+              </ul>
+              <a class="button" href="/methods/lime" data-method="lime" aria-label="Select LIME">Use LIME</a>
+            </article>
+
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="year"></span> Interpretable ML. All rights reserved.</p>
+        <p class="small">This is a research prototype for exploring model interpretability methods.</p>
+      </div>
+    </footer>
+
+    <script>
+      // Progressive enhancement: set current year and capture selection intent.
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // In a later step we will wire these to navigate to method flows.
+      document.querySelectorAll('.button[data-method]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const href = btn.getAttribute('href') || '#';
+          // Only intercept clicks for placeholder links
+          if (href === '#') {
+            e.preventDefault();
+          }
+          const method = btn.getAttribute('data-method');
+          // Placeholder: visual feedback only for now
+          btn.classList.add('selected');
+          btn.textContent = 'Selected';
+          btn.setAttribute('aria-pressed', 'true');
+        });
+      });
+    </script>
+  </body>
+</html>

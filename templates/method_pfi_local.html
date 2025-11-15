@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Per-point importance Configuration — Interpretable ML</title>
+    <meta name="description" content="Configure parameters to run local PPI explanations." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/home.css" />
+    <link rel="stylesheet" href="/static/css/form.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <a class="brand-link" href="/" aria-label="Back to home">
+            <span class="brand-mark">∫</span>
+            <span class="brand-name">Interpretable ML</span>
+          </a>
+        </div>
+        <nav class="top-nav" aria-label="Breadcrumb">
+          <a class="nav-link" href="/">Home</a>
+          <a class="nav-link" href="/methods-descriptions">Methods</a>
+          <a class="nav-link" href="/instructions">Instructions</a>
+          <span class="crumb">/</span>
+          <span class="nav-link current">Per-point importance</span>
+        </nav>
+      </div>
+    </header>
+
+    <main id="content" class="site-main">
+      <section class="container">
+        <h1 class="page-title">Configure Per-point importance</h1>
+        <p class="page-sub">Per-point importance computes local importance by perturbing a single instance's points. Provide required parameters below.</p>
+
+        <form id="pfi-local-form" class="form" novalidate>
+          <input type="hidden" name="method_name" value="pfi_local" />
+
+          <fieldset class="panel">
+            <legend>Labels</legend>
+            <div class="grid two">
+              <div class="field">
+                <label for="variate_labels">Variate labels <span class="hint">optional, comma-separated</span></label>
+                <input id="variate_labels" name="variate_labels" type="text" placeholder="e.g. Lead I, Lead II, Lead III" />
+              </div>
+              <div class="field">
+                <label for="class_labels">Class labels <span class="hint">optional, comma-separated</span></label>
+                <input id="class_labels" name="class_labels" type="text" placeholder="e.g. Normal, Block, Other" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="panel">
+            <legend>Instances Configuration</legend>
+            <div class="grid two">
+              <div class="field">
+                <label for="instances_variates">Variates <span class="hint">optional</span></label>
+                <input id="instances_variates" name="instances_config.variates" type="number" inputmode="numeric" min="0" step="1" placeholder="e.g. 2" />
+              </div>
+              <div class="field required">
+                <label for="instances_timesteps">Timesteps <span class="req">required</span></label>
+                <input id="instances_timesteps" name="instances_config.timesteps" type="number" inputmode="numeric" min="1" step="1" required placeholder="e.g. 1" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="panel">
+            <legend>Model Configuration</legend>
+            <div class="grid three">
+              <div class="field required">
+                <label for="model_batch_size">Batch size <span class="req">required</span></label>
+                <input id="model_batch_size" name="model_config.batch_size" type="number" inputmode="numeric" min="1" step="1" value="16" required placeholder="e.g. 32" />
+              </div>
+              <div class="field required">
+                <label for="model_verbose">Verbose <span class="req">required</span></label>
+                <input id="model_verbose" name="model_config.verbose" type="number" inputmode="numeric" min="0" step="1" value="1" required placeholder="e.g. 0" />
+              </div>
+              <div class="field required">
+                <label for="model_compile">Compile <span class="req">required</span></label>
+                <select id="model_compile" name="model_config.compile" required>
+                  <option value="" disabled selected>Select...</option>
+                  <option value="true">true</option>
+                  <option value="false">false</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid two">
+              <div class="field">
+                <label for="model_loss">Loss <span class="hint">optional</span></label>
+                <input id="model_loss" name="model_config.loss" type="text" placeholder="e.g. categorical_crossentropy" />
+              </div>
+              <div class="field">
+                <label for="model_optimizer">Optimizer <span class="hint">optional</span></label>
+                <input id="model_optimizer" name="model_config.optimizer" type="text" placeholder="e.g. Adam" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="panel">
+            <legend>Method Configuration</legend>
+            <div class="grid two">
+              <div class="field required">
+                <label for="method_max_range">Maximum range <span class="req">required</span></label>
+                <input id="method_max_range" name="method_config.max_range" type="number" step="any" required placeholder="e.g. 0.5" />
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="actions">
+            <a class="button ghost" href="/">Back</a>
+            <button type="submit" class="button">Continue</button>
+          </div>
+        </form>
+
+        <details class="panel preview" id="preview">
+          <summary>Preview payload (client-side only)</summary>
+          <pre id="preview-json" class="code"></pre>
+        </details>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="year"></span> Interpretable ML</p>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      function formToConfig(form) {
+        const data = new FormData(form);
+        const config = {
+          method_name: 'pfi_local',
+          variate_labels: null,
+          class_labels: null,
+          instances_config: {},
+          model_config: {},
+          method_config: {},
+        };
+
+        for (const [key, value] of data.entries()) {
+          if (key === 'variate_labels') {
+            config.variate_labels = value === '' ? null : value.split(',').map(s => s.trim()).filter(Boolean);
+          } else if (key === 'class_labels') {
+            config.class_labels = value === '' ? null : value.split(',').map(s => s.trim()).filter(Boolean);
+          } else if (key.startsWith('instances_config.')) {
+            const k = key.replace('instances_config.', '');
+            config.instances_config[k] = coerceNumber(value);
+          } else if (key.startsWith('model_config.')) {
+            const k = key.replace('model_config.', '');
+            config.model_config[k] = k === 'compile' ? (value === 'true') : coerceNumberOrString(value);
+          } else if (key.startsWith('method_config.')) {
+            const k = key.replace('method_config.', '');
+            config.method_config[k] = coerceNumber(value);
+          }
+        }
+
+        if (!('variates' in config.instances_config)) config.instances_config.variates = null;
+        if (!('loss' in config.model_config)) config.model_config.loss = null;
+        if (!('optimizer' in config.model_config)) config.model_config.optimizer = null;
+        if (!('max_range' in config.method_config)) config.method_config.max_range = null;
+        return config;
+      }
+
+      function coerceNumber(v) {
+        if (v === '') return null;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : v;
+      }
+      function coerceNumberOrString(v) {
+        if (v === '') return null;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : v;
+      }
+
+      const form = document.getElementById('pfi-local-form');
+      const previewPre = document.getElementById('preview-json');
+
+      const updatePreview = () => {
+        const cfg = formToConfig(form);
+        previewPre.textContent = JSON.stringify(cfg, null, 2);
+      };
+
+      form.addEventListener('input', updatePreview);
+      form.addEventListener('change', updatePreview);
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const cfg = formToConfig(form);
+        try { localStorage.setItem('input_config', JSON.stringify(cfg)); } catch (e) {}
+        try {
+          const res = await fetch('/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(cfg)
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            alert('Failed to save configuration: ' + (err.message || res.statusText));
+            return;
+          }
+        } catch (err) {
+          alert('Network error while saving configuration.');
+          return;
+        }
+        window.location.href = '/run/setup?method=pfi_local';
+      });
+
+      updatePreview();
+    </script>
+  </body>
+</html>

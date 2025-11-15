@@ -1,0 +1,32 @@
+version: "3.3"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: interpretable-ml-api
+    env_file:
+      - ./service.env
+    ports:
+      - target: 5000
+        published: 5001
+        protocol: tcp
+    volumes:
+      # Live code updates without rebuilding the image
+      - ./:/app
+      # Mount data/model and outputs at a stable path used by env vars
+      - ../material:/workspace/material:ro
+      - ../outputs:/workspace/outputs
+    working_dir: /app
+    command: ["python", "service.py"]
+    stdin_open: true
+    tty: true
+    # Optional: faster restarts when editing only Python files
+    # develop:
+    #   watch:
+    #     - action: sync
+    #       path: .
+    #       target: /app
+    #       ignore:
+    #         - outputs/**

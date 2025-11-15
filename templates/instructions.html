@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>How to use — Interpretable ML</title>
+    <meta name="description" content="Instructions and tips to run explanations with the Interpretable ML demo." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/home.css" />
+    <link rel="stylesheet" href="/static/css/form.css" />
+    <style>
+      .lead { margin-top: 6px; color: var(--muted); }
+      .how-grid { display: grid; gap: 18px; grid-template-columns: 1fr; }
+      .note {
+        background: linear-gradient(180deg, var(--panel-2), var(--panel));
+        border-left: 3px solid var(--accent);
+        padding: 12px 14px;
+        color: var(--text);
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(3,8,20,0.35);
+      }
+      pre.cmd { background:#111; color:#eee; padding:10px;border-radius:6px; overflow:auto }
+      ul.check { margin: 8px 0 0 20px; }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <a class="brand-link" href="/" aria-label="Back to home">
+            <span class="brand-mark">∫</span>
+            <span class="brand-name">Interpretable ML</span>
+          </a>
+        </div>
+        <nav class="top-nav" aria-label="Primary">
+          <a class="nav-link" href="/methods-descriptions">Methods details</a>
+          <a class="nav-link" href="/instructions">User guide</a>
+          <a class="nav-link" href="#about">About us</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="content" class="site-main">
+      <section class="container">
+        <h1 class="page-title">How to use this demo</h1>
+        <p class="lead">Short guide to upload data, configure a method, run explanations and inspect the generated plots.</p>
+
+        <div class="how-grid">
+          <article class="panel">
+            <h3>1) Pick a method</h3>
+            <p>From the home page choose one of the available methods (Global Surrogate, Per-point importance (PFI Local), Counterfactual Explanations, Counterfactual + PFI (hybrid), or LIME). For hybrid flows choose the corresponding combined card.</p>
+          </article>
+
+          <article class="panel">
+            <h3>2) Configure the method</h3>
+            <p>The method page contains all hyperparameters for that technique. A few important notes:</p>
+            <ul>
+              <li>LIME type: choose <code>ECG</code>, <code>With Slices</code> or <code>General</code>. Dependent fields (sampling rate, n_slices, max_range) will be enabled automatically.</li>
+              <li>Per-point importance (PFI Local): select perturbation granularity (single point vs. slice), repeats and scoring metric.</li>
+              <li>Counterfactual and hybrid flows: choose the counterfactual flavor and any guidance source (LIME coefficients or PFI importance) if available.</li>
+              <li>Optional fields are preserved as <code>null</code> if left empty — this keeps the payload stable.</li>
+            </ul>
+          </article>
+
+          <article class="panel">
+            <h3>3) Provide data and model</h3>
+            <p>On the <strong>Provide data</strong> page you must upload:</p>
+            <ul>
+              <li><strong>Instances</strong>: an HDF5 file (.hdf5 / .h5) containing a dataset with the instances array. Use the <em>Dataset Name</em> field (default <code>tracings</code>) to select the dataset inside the HDF5 file.</li>
+              <li><strong>Model</strong>: a Keras/TensorFlow model saved in the HDF5 format.</li>
+              <li><strong>Ground truth</strong> (CSV): required for counterfactual methods. If your chosen method requires ground truth, the form will indicate it.</li>
+            </ul>
+            <div class="note">Tip: The page preserves non-file inputs (dataset name, instance index) when you click Back so you can tweak method parameters without retyping them.</div>
+          </article>
+
+          <article class="panel">
+            <h3>4) Run and wait</h3>
+            <p>When you submit the run the server will create the explanation and plot files. A loading overlay appears while processing — counterfactuals and some LIME runs may take several minutes depending on your model and parameters.</p>
+          </article>
+
+          <article class="panel">
+            <h3>5) View results</h3>
+            <p>After the run you'll be forwarded to the <strong>Results</strong> page where generated plots are shown as thumbnails. Click any image to open a zoomable lightbox with pan and download options.</p>
+          </article>
+
+          <article class="panel">
+            <h3>Method-specific: how to fill each form</h3>
+            <p>Below you'll find step-by-step guidance for each method's configuration form. Common sections present on every method page are <strong>Labels</strong>, <strong>Instances Configuration</strong> and <strong>Model Configuration</strong>. After those, each method has its <strong>Method Configuration</strong> section with technique-specific fields. Follow the numbered steps for each method.</p>
+
+            <h4>LIME (Local explanations)</h4>
+            <ol>
+              <li>Labels (optional): enter comma-separated <code>Variate labels</code> and <code>Class labels</code> only if you want plots to show human names (e.g. <code>Lead I, Lead II</code>).</li>
+              <li>Instances Configuration: set <code>Variates</code> if your data has multiple channels (optional). <strong>Timesteps</strong> is required — set it to the number of timepoints in each instance.</li>
+              <li>Model Configuration: provide <code>batch_size</code> (e.g. 16 or 32), <code>verbose</code> (0/1) and whether to <code>compile</code> the model (select <code>true</code> or <code>false</code>). Optional: <code>loss</code> and <code>optimizer</code> strings only if your model needs compile info.</li>
+              <li>Method Configuration:
+                <ol>
+                  <li><strong>Lime type</strong> (required): select one of <code>ECG</code>, <code>With Slices</code>, or <code>General</code>. This toggles dependent fields:</li>
+                  <ul>
+                    <li><code>With Slices</code> → enable <code>Number of slices (n_slices)</code>.</li>
+                    <li><code>ECG</code> → enable <code>Sampling rate</code>.</li>
+                    <li><code>General</code> → enable <code>Maximum range</code> (a float representing max additive perturbation).</li>
+                  </ul>
+                  <li><strong>Number of samples</strong> (<code>n_samples</code>, required): how many perturbed samples to generate — default 100. Larger → more stable but slower.</li>
+                  <li><strong>Percentage of top features</strong> (<code>top_features_percentage</code>, required): how many top points to highlight (1–100). Default shown in the form is 3.</li>
+                </ol>
+              </li>
+              <li>Tips: For quick testing use small <code>n_samples</code> (e.g. 50). For final runs use 200–1000 depending on budget.</li>
+            </ol>
+
+            <h4>Counterfactual Explanations (Genetic search)</h4>
+            <ol>
+              <li>Labels and Instances: same as above (provide labels if helpful, set <code>timesteps</code>).</li>
+              <li>Model Configuration: same as LIME — ensure batch size and compile settings match how you load the model.</li>
+              <li>Method Configuration:
+                <ol>
+                  <li><strong>CE type</strong> (required): select <code>ECG</code>, <code>With Slices</code>, or <code>General</code>. This enables either <code>sampling_rate</code>, <code>n_slices</code> or <code>max_range</code> respectively.</li>
+                  <li><strong>Population size</strong> (<code>pop_size</code>, required): number of candidate solutions per generation — larger increases search diversity (e.g. 10–50).</li>
+                  <li><strong>Number of generations</strong> (<code>n_generations</code>, required): how many GA iterations to run (e.g. 10–200).</li>
+                  <li><strong>Probabilities</strong> (required): <code>prob_crossover</code> (e.g. 0.8–0.95) and <code>prob_mutation</code> (e.g. 0.01–0.2). The <code>prob_change_piece</code> controls how often a segment/piece is changed (default ~0.25).</li>
+                  <li><strong>Tournament size</strong> (<code>tournament_size</code>, required): selection pressure (common values 2–5).</li>
+                  <li><strong>Maximum retries</strong> (<code>max_retries</code>, required): how many times the search will retry before giving up (default 5).</li>
+                  <li>Optional tuning: <code>min_fitness</code> to stop early when a quality threshold is reached; <code>label_idx</code> to target a specific class index (defaults to 0 when omitted).</li>
+                </ol>
+              </li>
+              <li>Tips: For fast experiments use small <code>pop_size</code> (e.g. 8) and few generations. Increase both for better-quality counterfactuals. If runs are timing out, reduce population/generations first.</li>
+            </ol>
+
+            <h4>Counterfactual + PFI (hybrid)</h4>
+            <ol>
+              <li>This hybrid form contains both the Counterfactual fields above and a small PFI Local block.</li>
+              <li>Follow the Counterfactual steps to configure the genetic search.</li>
+              <li>PFI Local Configuration (required here): <code>Maximum range</code> — the perturbation magnitude used to compute per-point importance on the resulting counterfactual(s). Typical values mirror <code>max_range</code> used for general perturbations (e.g. 0.1–0.5) depending on input scale.</li>
+              <li>Tips: Use PFI to prioritise which points the counterfactual search should edit, or to validate which changed points most influenced the decision.</li>
+            </ol>
+
+            <h4>PFI Local (Per-point importance)</h4>
+            <ol>
+              <li>Labels and Instances: same as other methods.</li>
+              <li>Model Configuration: same as other methods.</li>
+              <li>Method Configuration:
+                <ol>
+                  <li><strong>Maximum range</strong> (<code>method_config.max_range</code>, required): maximum additive perturbation applied per timepoint when estimating importance. Choose this according to typical signal amplitude (e.g. 0.05–0.5).</li>
+                </ol>
+              </li>
+              <li>Tips: smaller ranges show sensitivity to tiny changes; larger ranges reveal robustness to more substantial edits. When in doubt, start with a conservative small value and increase if signals are normalized.</li>
+            </ol>
+
+            <h4>Global Surrogate</h4>
+            <ol>
+              <li>Labels and Instances: same as above.</li>
+              <li>Model Configuration: same as above.</li>
+              <li>Method Configuration: none required — the surrogate is trained automatically using model predictions and instances supplied.</li>
+              <li>Tips: Global Surrogate explains model behaviour at a dataset level. Provide representative instances and ensure the dataset used to fit the surrogate covers typical cases.</li>
+            </ol>
+
+            <p class="note">Payload shape reminder: the front-end builds a nested <code>method_config</code> object. For hybrid flows the orchestrator accepts a separated shape for clarity, e.g. <code>{ counterfactual: {...}, lime: {...}, pfi_local: {...} }</code>. Optional fields are set to <code>null</code> when left blank to preserve stability.</p>
+          </article>
+
+          <article class="panel">
+            <h3>Troubleshooting & FAQ</h3>
+            <ul>
+              <li>If the server returns a validation error about missing fields, double-check the method page for required parameters (they're enabled when needed).</li>
+              <li>HDF5 dataset not found? Ensure the <em>Dataset Name</em> matches the dataset inside your file (e.g. <code>tracings</code>), HDF5 files can contain groups — provide the full path if needed.</li>
+              <li>Large runs time out in low-resource environments — reduce population/generations or LIME sample size for testing.</li>
+            </ul>
+          </article>
+
+          <article class="panel">
+            <h3>Contact & contribution</h3>
+            <p>If you have issues or want to contribute, open an issue in the repository or email the maintainer. Contributions that add tests, improve input validation, or namespace plot outputs per-run are especially welcome.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="year"></span> Interpretable ML</p>
+      </div>
+    </footer>
+
+    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  </body>
+</html>

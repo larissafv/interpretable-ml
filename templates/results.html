@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Results — Interpretable ML</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/home.css" />
+    <link rel="stylesheet" href="/static/css/form.css" />
+    <style>
+      /* Lightbox / zoom modal styles */
+      .plots-grid { display: grid; gap: 14px; }
+      @media (min-width: 780px) { .plots-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+      .plots-grid figure { margin: 0; }
+      .plots-grid img { cursor: zoom-in; transition: box-shadow .2s, transform .2s; }
+      .plots-grid img:hover { box-shadow: 0 0 0 4px rgba(88,166,255,0.35); }
+
+      .img-modal { position: fixed; inset: 0; z-index: 1000; display: none; }
+      .img-modal[aria-hidden="false"] { display: block; }
+      .img-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.78); backdrop-filter: blur(4px); }
+      .img-modal-content { position: absolute; inset: 40px 30px 30px; display: flex; flex-direction: column; gap: 8px; }
+      .img-modal-toolbar { display: flex; align-items: center; gap: 8px; background: rgba(17,22,29,.9); border: 1px solid rgba(255,255,255,0.08); padding: 6px 10px; border-radius: 10px; font-size: 13px; }
+      .img-modal-toolbar button, .img-modal-toolbar a { background: #1b2530; border: 1px solid rgba(255,255,255,0.12); color: #e6edf3; padding: 4px 8px; font-size: 12px; border-radius: 6px; cursor: pointer; text-decoration: none; }
+      .img-modal-toolbar button:hover, .img-modal-toolbar a:hover { background: #253242; }
+      .img-modal-toolbar .spacer { flex: 1; }
+      .img-modal-close { position: absolute; top: 6px; right: 8px; background: transparent; border: none; font-size: 28px; line-height: 1; color: #c9d1d9; cursor: pointer; }
+      .img-modal-close:hover { color: white; }
+      .img-modal-stage { flex: 1; position: relative; border: 1px solid rgba(255,255,255,0.1); background: #0b0e13; border-radius: 12px; overflow: hidden; }
+      .img-modal-stage-inner { position: absolute; inset: 0; cursor: grab; }
+      .img-modal-stage-inner.dragging { cursor: grabbing; }
+      #img-modal-image { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); transform-origin: center center; user-select: none; -webkit-user-drag: none; max-width: none; max-height: none; image-rendering: auto; }
+      .img-modal-hint { font-size: 12px; color: var(--muted); text-align: right; margin-top: 4px; }
+      @media (max-width: 680px) {
+        .img-modal-content { inset: 20px 14px 16px; }
+        .img-modal-toolbar { flex-wrap: wrap; }
+        .img-modal-close { top: 2px; right: 4px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <a class="brand-link" href="/" aria-label="Back to home">
+            <span class="brand-mark">∫</span>
+            <span class="brand-name">Interpretable ML</span>
+          </a>
+        </div>
+        <nav class="top-nav" aria-label="Breadcrumb">
+          <a class="nav-link" href="/">Home</a>
+          <span class="crumb">/</span>
+          <span class="nav-link current">Results</span>
+        </nav>
+      </div>
+    </header>
+
+    <main id="content" class="site-main">
+      <section class="container">
+        <h1 class="page-title">Explanation results</h1>
+        {% if method %}
+        <p class="page-sub">
+          Method: <strong>{{ method }}</strong>
+          {% if elapsed %} · Elapsed: {{ '%.3f'|format(elapsed) }}s{% endif %}
+          {% if fitness is not none %}
+            · Fitness: {{ '%.4f'|format(fitness) }}
+          {% elif fitness_str %}
+            · Fitness: {{ fitness_str }}
+          {% endif %}
+        </p>
+        {% endif %}
+
+        {% if not plot_files or plot_files|length == 0 %}
+          <div class="panel">
+            <p>No plots were found for the last run. Please go back and run an explanation.</p>
+            <div class="actions">
+              <a class="button" href="/run/setup">Run another explanation</a>
+            </div>
+          </div>
+        {% else %}
+          <div class="panel">
+            <div class="plots-grid">
+              {% for fname in plot_files %}
+              <figure class="field">
+                <img class="zoom-plot" data-filename="{{ fname }}" src="/plots/{{ fname }}" alt="Plot {{ loop.index }} ({{ fname }})" style="max-width:100%;height:auto;border:1px solid rgba(255,255,255,0.08);border-radius:10px;background:#0f141b;" />
+                <figcaption style="margin-top:6px;font-size:0.8rem;color:var(--muted);word-break:break-all;">{{ fname }}</figcaption>
+              </figure>
+              {% endfor %}
+            </div>
+            <div class="actions" style="margin-top:16px;">
+              <a class="button ghost" href="/">Home</a>
+            </div>
+          </div>
+        {% endif %}
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="year"></span> Interpretable ML</p>
+      </div>
+    </footer>
+    <!-- Lightbox Modal Structure -->
+    <div id="img-modal" class="img-modal" aria-hidden="true">
+      <div class="img-modal-backdrop" data-close></div>
+      <div class="img-modal-content" role="dialog" aria-modal="true" aria-label="Plot zoom dialog">
+        <button class="img-modal-close" type="button" data-close aria-label="Close">&times;</button>
+        <div class="img-modal-toolbar">
+          <span id="img-modal-filename"></span>
+          <div class="spacer"></div>
+            <button id="img-zoom-out" type="button" title="Zoom Out">-</button>
+            <button id="img-zoom-in" type="button" title="Zoom In">+</button>
+            <button id="img-zoom-reset" type="button" title="Reset Zoom">Reset</button>
+            <button id="img-fullscreen" type="button" title="Fullscreen">Fullscreen</button>
+            <a id="img-download" class="download-link" title="Download image" download>Download</a>
+        </div>
+        <div class="img-modal-stage">
+          <div class="img-modal-stage-inner" id="img-stage-inner">
+            <img id="img-modal-image" alt="Zoomed plot" />
+          </div>
+        </div>
+        <div class="img-modal-hint">Scroll / +/- to zoom · Drag to pan · Esc / click outside to close</div>
+      </div>
+    </div>
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+      (function(){
+        const modal = document.getElementById('img-modal');
+        const imgEl = document.getElementById('img-modal-image');
+        const fileLabel = document.getElementById('img-modal-filename');
+        const downloadLink = document.getElementById('img-download');
+        const stageInner = document.getElementById('img-stage-inner');
+        const btnIn = document.getElementById('img-zoom-in');
+        const btnOut = document.getElementById('img-zoom-out');
+        const btnReset = document.getElementById('img-zoom-reset');
+        const btnFs = document.getElementById('img-fullscreen');
+        let scale = 1; let tx = 0; let ty = 0; let dragging = false; let startX=0; let startY=0; let startTx=0; let startTy=0;
+
+        function applyTransform(){
+          imgEl.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${scale})`;
+        }
+        function clamp(val,min,max){ return Math.min(Math.max(val,min),max); }
+        function openModal(src, filename){
+          modal.setAttribute('aria-hidden','false');
+          imgEl.src = src;
+          imgEl.draggable = false;
+          fileLabel.textContent = filename || '';
+          downloadLink.href = src;
+          downloadLink.download = filename || 'plot.png';
+          scale = 1; tx = 0; ty = 0; applyTransform();
+          setTimeout(()=>{ modal.querySelector('.img-modal-close').focus({preventScroll:true}); }, 50);
+          document.body.style.overflow='hidden';
+        }
+        function closeModal(){
+          modal.setAttribute('aria-hidden','true');
+          imgEl.src='';
+          document.body.style.overflow='';
+        }
+        function zoom(delta, centerX, centerY){
+          const prevScale = scale;
+            scale = clamp(scale * (delta > 0 ? 1/1.1 : 1.1), 0.2, 10);
+          // Adjust translation to zoom towards cursor
+          const rect = imgEl.getBoundingClientRect();
+          const imgCenterX = rect.left + rect.width/2;
+          const imgCenterY = rect.top + rect.height/2;
+          const dx = centerX - imgCenterX;
+          const dy = centerY - imgCenterY;
+          const factor = (scale/prevScale - 1);
+          tx -= dx * factor; ty -= dy * factor; applyTransform();
+        }
+        function zoomStep(step){ // step: +1 or -1
+          const rect = imgEl.getBoundingClientRect();
+          zoom(step < 0 ? 1 : -1, rect.left + rect.width/2, rect.top + rect.height/2);
+        }
+        document.querySelectorAll('.zoom-plot').forEach(el => {
+          el.addEventListener('click', () => openModal(el.src, el.dataset.filename));
+          el.addEventListener('keydown', (e) => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openModal(el.src, el.dataset.filename); } });
+          el.setAttribute('tabindex','0');
+        });
+        modal.addEventListener('click', (e)=>{ if(e.target.hasAttribute('data-close')) closeModal(); });
+        modal.querySelectorAll('[data-close]').forEach(btn => btn.addEventListener('click', closeModal));
+        document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && modal.getAttribute('aria-hidden')==='false') closeModal(); });
+        stageInner.addEventListener('wheel', (e)=>{ if(modal.getAttribute('aria-hidden')==='true') return; e.preventDefault(); zoom(e.deltaY, e.clientX, e.clientY); }, {passive:false});
+        // Drag to pan
+        stageInner.addEventListener('mousedown', (e)=>{ if(e.button!==0) return; dragging=true; startX=e.clientX; startY=e.clientY; startTx=tx; startTy=ty; stageInner.classList.add('dragging'); });
+        window.addEventListener('mousemove', (e)=>{ if(!dragging) return; tx = startTx + (e.clientX - startX); ty = startTy + (e.clientY - startY); applyTransform(); });
+        window.addEventListener('mouseup', ()=>{ dragging=false; stageInner.classList.remove('dragging'); });
+        // Buttons
+        btnIn.addEventListener('click', ()=> zoomStep(+1));
+        btnOut.addEventListener('click', ()=> zoomStep(-1));
+        btnReset.addEventListener('click', ()=>{ scale=1; tx=0; ty=0; applyTransform(); });
+        btnFs.addEventListener('click', ()=>{
+          const content = modal.querySelector('.img-modal-content');
+          if(!document.fullscreenElement) { content.requestFullscreen?.(); } else { document.exitFullscreen?.(); }
+        });
+      })();
+    </script>
+  </body>
+</html>
