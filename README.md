@@ -11,7 +11,6 @@ Top-level files and folders you’ll commonly use:
 - `requirements.txt` — Python dependencies for development and running locally.
 - `docker-compose.yml`, `Dockerfile`, `service.env` — Docker-based setup for containerized deployment.
 - `input.json` — example input used by the project (keeps example requests or configuration).
-- `tests.ipynb` — an exploratory notebook for manual tests and demonstrations.
 
 Packages and purpose:
 
@@ -86,7 +85,6 @@ The repository is structured so methods are modular — you can import and call 
 ## Examples
 
 - Run a local explanation: start `service.py`, then run `python client.py` (adjust the sample payload in `client.py` or `input.json`).
-- Open `tests.ipynb` for interactive examples and demonstrations.
 
 ## Notes & troubleshooting
 
@@ -100,5 +98,5 @@ Contributions are welcome. Please follow these guidelines:
 
 1. Create an issue describing the change or feature.
 2. Make a branch off `main` for the work.
-3. Add tests or a short notebook example (`tests.ipynb`) that demonstrates the change, when applicable.
+3. Add tests or a short notebook example that demonstrates the change, when applicable.
 4. Open a pull request describing the change.

@@ -27,7 +27,6 @@ from pathlib import Path
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics.pairwise import pairwise_distances
 
 from common.perturbations import (
     perturb_ecg,
@@ -95,9 +94,6 @@ class LIME:
         # Number of top features to highlight in plots
         self._top_features_percentage = config.top_features_percentage
 
-        # Kernel width for weighting perturbed samples
-        self._kernel_width = config.kernel_width
-
     def explain(
         self,
         instance: np.ndarray,
@@ -144,12 +140,6 @@ class LIME:
         # Convert samples to model input format and get predictions
         input_model_samples = format_instance.unformat(samples)
         y_pred = self._model.predict(input_model_samples)
-
-        # Compute distances between original instance and perturbed samples
-        distances = self._cosine_distance(instance[0], samples)
-
-        # Compute kernel weights based on distances
-        weights = self._kernel(distances)
         
         # Keep first dimension (n_samples) and flatten the last two (features)
         n_samples, n_variates, n_timesteps = samples.shape
@@ -157,7 +147,7 @@ class LIME:
         
         # Train interpretable linear model on flattened perturbed data
         interpretable_model = LinearRegression()
-        interpretable_model.fit(X=x_flat, y=y_pred, sample_weight=weights)
+        interpretable_model.fit(X=x_flat, y=y_pred)
         
         # Reshape coefficients back to (targets, variates, timesteps) or (variates, timesteps)
         coef = interpretable_model.coef_
@@ -269,51 +259,6 @@ class LIME:
         elif self._lime_type == "general":
             # General perturbations for various data types
             return perturb_general(instance, self._n_samples, self._max_range, variate_labels)
-
-    def _cosine_distance(self, original: np.ndarray, samples: np.ndarray) -> np.ndarray:
-        """Compute cosine distances between an original instance and perturbed samples.
-
-        The cosine distance is defined as 1 - cosine_similarity. Values will be in
-        the range [0, 2] since cosine similarity lies in [-1, 1].
-
-        Args:
-            original: Array of shape (n_variates, n_timesteps) representing the
-                original instance.
-            samples: Array of shape (n_samples, n_variates, n_timesteps) with
-                perturbed samples to compare against `original`.
-
-        Returns:
-            A 1-D ``np.ndarray`` of length ``n_samples`` containing the cosine
-            distance between each sample and the original instance.
-        """
-        # Flatten inputs and delegate to sklearn for robust, vectorized computation
-        orig_flat = original.ravel().reshape(1, -1)
-        samples_flat = samples.reshape(samples.shape[0], -1)
-
-        # pairwise_distances with metric='cosine' returns 1 - cosine_similarity
-        distances = pairwise_distances(samples_flat, orig_flat, metric="cosine").ravel()
-        return distances
-    
-    def _kernel(self, distances: np.ndarray) -> np.ndarray:
-        """
-        Calculate kernel weights based on distances using an exponential kernel.
-
-        This method computes weights for samples based on their distance from the original
-        instance using a kernel function. The weights decrease exponentially as distance
-        increases, giving more importance to samples closer to the instance being explained.
-        The kernel_width parameter controls the sensitivity of the kernel to distance. Smaller
-        values make the kernel more sensitive to distance.
-
-        Args:
-            distances: Array of distances between the perturbed samples and
-                the original instance.
-
-        Returns:
-            np.ndarray: Array of kernel weights with the same shape as the input distances.
-                Values are in the range (0, 1], where weights closer to 1 indicate samples
-                that are more similar to the original instance.
-        """
-        return np.sqrt(np.exp(-(distances ** 2) / self._kernel_width ** 2))
 
     def _get_top_features(self, coef: np.ndarray) -> np.ndarray:
         n_best_features = int((self._top_features_percentage / 100) * coef.shape[-1])

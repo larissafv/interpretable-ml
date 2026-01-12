@@ -22,11 +22,10 @@ class Individual:
     """GA individual holding a candidate counterfactual instance and fitness."""
 
     def __init__(
-        self, value: np.ndarray, prediction: float | None = None, fitness: float | None = None
+        self, value: np.ndarray, fitness: float | None = None
     ) -> None:
-        """Initialize an individual with its value, prediction and fitness."""
+        """Initialize an individual with its value and optional fitness."""
         self.value = value
-        self.prediction = prediction
         self.fitness = fitness
 
     def crossover(
@@ -36,15 +35,15 @@ class Individual:
         prob_change_piece: float,
         label_idx: int,
         max_retries: int,
-        original_pred: int,
-        sign: bool,
+        threshold: float,
+        goal: int,
         format_instance: FormatInstance,
     ) -> bool:
         """Perform crossover with another individual.
 
         Swaps elements between `self` and `other` with probability
-        `prob_change_piece`, accepting offspring only if they change
-        the current prediction.
+        `prob_change_piece`, accepting offspring only if they preserve
+        the current prediction (i.e., not yet flipping to the goal).
         Returns True if a successful crossover occurred.
         """
         success = False
@@ -59,45 +58,18 @@ class Individual:
                         child1[0, i, j], child2[0, i, j] = child2[0, i, j], child1[0, i, j]
 
             instance1_pred = model.predict(format_instance.unformat(child1))
-            pred_label1 = instance1_pred[0][label_idx]
-
-            # If the prediction did not change in the desired direction, skip
-            if (not (sign and pred_label1 < original_pred) and
-                    not (not sign and pred_label1 > original_pred)):
+            pred1 = 1 if instance1_pred[0][label_idx] > threshold else 0
+            if pred1 != goal:
                 continue
 
-            #pred1 = 1 if instance1_pred[0][label_idx] > threshold else 0
-            #if pred1 != goal:
-            #    continue
-
             instance2_pred = model.predict(format_instance.unformat(child2))
-            pred_label2 = instance2_pred[0][label_idx]
+            pred2 = 1 if instance2_pred[0][label_idx] > threshold else 0
 
-            # If the prediction was True, then the new prediction must be lower than original
-            if sign and pred_label2 < original_pred:
+            if pred2 == pred1:
                 self.value = child1
-                self.prediction = pred_label1
                 other.value = child2
-                other.prediction = pred_label2
                 success = True
                 break
-
-            # If the prediction was False, then the new prediction must be higher than original
-            elif not sign and pred_label2 > original_pred:
-                self.value = child1
-                self.prediction = pred_label1
-                other.value = child2
-                other.prediction = pred_label2
-                success = True
-                break
-
-            #pred2 = 1 if instance2_pred[0][label_idx] > threshold else 0
-
-            #if pred2 == pred1:
-            #    self.value = child1
-            #    other.value = child2
-            #    success = True
-            #    break
         return success
 
     def mutation(
@@ -111,14 +83,14 @@ class Individual:
         prob_change_piece: float,
         label_idx: int,
         max_retries: int,
-        original_pred: int,
-        sign: bool,
+        threshold: float,
+        goal: int,
         format_instance: FormatInstance,
         probs: np.ndarray | None = None,
     ) -> bool:
         """Mutate the individual according to the selected CE strategy.
 
-        Returns True if a successful mutation (that changes current prediction)
+        Returns True if a successful mutation (that maintains current prediction)
         is found and applied within the retry budget.
         """
         success = False
@@ -153,27 +125,11 @@ class Individual:
                 )
 
             new_instance_pred = model.predict(format_instance.unformat(new_instance))
-            pred_label = new_instance_pred[0][label_idx]
-
-            # If the prediction was True, then the new prediction must be lower than original
-            if sign and pred_label < original_pred:
+            pred = 1 if new_instance_pred[0][label_idx] > threshold else 0
+            if pred == goal:
                 self.value = new_instance
-                self.prediction = pred_label
                 success = True
                 break
-
-            # If the prediction was False, then the new prediction must be higher than original
-            elif not sign and pred_label > original_pred:
-                self.value = new_instance
-                self.prediction = pred_label
-                success = True
-                break
-
-            #pred = 1 if new_instance_pred[0][label_idx] > threshold else 0
-            #if pred == goal:
-            #    self.value = new_instance
-            #    success = True
-            #    break
         return success
     
     def crossover_original(
@@ -183,15 +139,15 @@ class Individual:
         prob_change_piece: float,
         label_idx: int,
         max_retries: int,
-        original_pred: int,
-        sign: bool,
+        threshold: float,
+        goal: int,
         format_instance: FormatInstance,
     ) -> bool:
         """Perform crossover with another individual.
 
-        Swaps elements between `self` and `original` with probability
-        `prob_change_piece`, accepting offspring only if they change
-        the current prediction.
+        Swaps elements between `self` and `other` with probability
+        `prob_change_piece`, accepting offspring only if they preserve
+        the current prediction (i.e., not yet flipping to the goal).
         Returns True if a successful crossover occurred.
         """
         success = False
@@ -205,27 +161,10 @@ class Individual:
                         child1[0, i, j] = original[0, i, j]
 
             instance1_pred = model.predict(format_instance.unformat(child1))
-            pred_label1 = instance1_pred[0][label_idx]
-
-            # If the prediction was True, then the new prediction must be lower than original
-            if sign and pred_label1 < original_pred:
+            pred1 = 1 if instance1_pred[0][label_idx] > threshold else 0
+            if pred1 == goal:
                 self.value = child1
-                self.prediction = pred_label1
                 success = True
                 break
-
-            # If the prediction was False, then the new prediction must be higher than original
-            elif not sign and pred_label1 > original_pred:
-                self.value = child1
-                self.prediction = pred_label1
-                success = True
-                break
-
-
-            #pred1 = 1 if instance1_pred[0][label_idx] > threshold else 0
-            #if pred1 == goal:
-            #    self.value = child1
-            #    success = True
-            #    break
             
         return success

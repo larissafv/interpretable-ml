@@ -132,9 +132,8 @@ class CounterfactualExplanation:
 
         # Get current prediction and set opposite as goal
         instance_pred = self._model.predict(np.array([[input_model[instance_idx]]]))
-        self._original_pred = instance_pred[0][self._label_idx]
-        self._sign = True if self._original_pred > self._threshold else False
-        #self._goal = 1 - original_pred  # Flip the prediction
+        original_pred = 1 if instance_pred[0][self._label_idx] > self._threshold else 0
+        self._goal = 1 - original_pred  # Flip the prediction
 
         # Run the genetic algorithm
         self._init_pop()
@@ -216,8 +215,8 @@ class CounterfactualExplanation:
                     aux_prob_change_piece,
                     self._label_idx,
                     self._max_retries,
-                    self._original_pred,
-                    self._sign,
+                    self._threshold,
+                    self._goal,
                     self._format_instance,
                     self._probs
                 )
@@ -260,12 +259,10 @@ class CounterfactualExplanation:
             # Calculate sum of absolute differences (L1 norm)
             absolute_differences = np.abs(individual.value - self._instance)
             sum_absolute_differences = np.sum(absolute_differences)
-
-            diff_preds = abs(individual.prediction - self._original_pred)
             
             # Combine both metrics - can be adjusted based on requirements
             # Lower values indicate better fitness (fewer and smaller changes)
-            individual.fitness = num_differences + sum_absolute_differences + (100 / diff_preds) 
+            individual.fitness = num_differences + sum_absolute_differences
             
 
     def _select_parents(self) -> tuple:
@@ -277,7 +274,7 @@ class CounterfactualExplanation:
 
         Returns:
             tuple: A tuple containing two parent tuples. Each parent tuple
-                contains (individual_value, prediction_score, fitness_score).
+                contains (individual_value, fitness_score).
 
         Note:
             Uses deep copy to prevent unintended modifications to the original
@@ -286,12 +283,12 @@ class CounterfactualExplanation:
         # Select first parent through tournament selection
         tournament = random.sample(self.population, self._tournament_size)
         best = min(tournament, key=lambda x: x.fitness)
-        parent1 = (copy.deepcopy(best.value), best.prediction, best.fitness)
+        parent1 = (copy.deepcopy(best.value), best.fitness)
 
         # Select second parent through tournament selection
         tournament = random.sample(self.population, self._tournament_size)
         best = min(tournament, key=lambda x: x.fitness)
-        parent2 = (copy.deepcopy(best.value), best.prediction, best.fitness)
+        parent2 = (copy.deepcopy(best.value), best.fitness)
 
         return (
             parent1,
@@ -340,8 +337,8 @@ class CounterfactualExplanation:
             parent1, parent2 = self._select_parents()
 
             # Create offspring from selected parents
-            child1 = Individual(parent1[0], parent1[1], parent1[2])
-            child2 = Individual(parent2[0], parent2[1], parent2[2])
+            child1 = Individual(parent1[0], parent1[1])
+            child2 = Individual(parent2[0], parent2[1])
 
             # Apply crossover with original instance with specified probability
             if random.random() < 0.3:  # noqa: S311
@@ -352,8 +349,8 @@ class CounterfactualExplanation:
                         self._prob_change_piece,
                         self._label_idx,
                         self._max_retries,
-                        self._original_pred,
-                        self._sign,
+                        self._threshold,
+                        self._goal,
                         self._format_instance
                     )
                     if success:
@@ -368,8 +365,8 @@ class CounterfactualExplanation:
                         self._prob_change_piece,
                         self._label_idx,
                         self._max_retries,
-                        self._original_pred,
-                        self._sign,
+                        self._threshold,
+                        self._goal,
                         self._format_instance
                     )
                     if success:
@@ -385,8 +382,8 @@ class CounterfactualExplanation:
                         self._prob_change_piece,
                         self._label_idx,
                         self._max_retries,
-                        self._original_pred,
-                        self._sign,
+                        self._threshold,
+                        self._goal,
                         self._format_instance
                     )
                     if success:
@@ -407,8 +404,8 @@ class CounterfactualExplanation:
                         aux_prob_change_piece,
                         self._label_idx,
                         self._max_retries,
-                        self._original_pred,
-                        self._sign,
+                        self._threshold,
+                        self._goal,
                         self._format_instance,
                         self._probs
                     )
@@ -434,8 +431,8 @@ class CounterfactualExplanation:
                         aux_prob_change_piece,
                         self._label_idx,
                         self._max_retries,
-                        self._original_pred,
-                        self._sign,
+                        self._threshold,
+                        self._goal,
                         self._format_instance,
                         self._probs
                     )

@@ -33,6 +33,7 @@
     <main id="content" class="site-main">
       <section class="container">
         <h1 class="page-title">Configure LIME</h1>
+        <p class="page-sub">Provide optional labels, then fill the configuration sections below. Required fields are marked.</p>
 
         <form id="lime-form" class="form" novalidate>
           <input type="hidden" name="method_name" value="lime" />
@@ -130,10 +131,6 @@
               <div class="field required">
                 <label for="method_top_features">Percentage of top features <span class="req">required</span></label>
                 <input id="method_top_features" name="method_config.top_features_percentage" type="number" inputmode="numeric" min="1" max="100" step="1" required value="3" />
-              </div>
-              <div class="field required">
-                <label for="method_kernel_width">Kernel width <span class="req">required</span></label>
-                <input id="method_kernel_width" name="method_config.kernel_width" type="number" step="any" required value="0.25" />
               </div>
             </div>
           </fieldset>

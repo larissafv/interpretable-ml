@@ -23,7 +23,6 @@ class LIMEConfig(json2dc.AddFromJsonInterface):
     max_range: float | None
     n_samples: int
     top_features_percentage: int  # Percentage of top features to highlight in plots.
-    kernel_width: float  # Kernel width for weighting perturbed samples.
 
     def __post_init__(self) -> None:
         if self.lime_type not in ["ecg", "with_slices", "general"]:
@@ -36,5 +35,3 @@ class LIMEConfig(json2dc.AddFromJsonInterface):
             raise ValueError("max_range must be specified for general LIME type.")
         if self.n_samples <= 0:
             raise ValueError("n_samples must be a positive integer.")
-        if self.kernel_width <= 0:
-            raise ValueError("kernel_width must be a positive number.")
