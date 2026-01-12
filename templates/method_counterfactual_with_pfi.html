@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Counterfactual + PPI — Interpretable ML</title>
+    <meta name="description" content="Configure Counterfactual Explanation with Per-point importance explanations." /> 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/home.css" />
+    <link rel="stylesheet" href="/static/css/form.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <a class="brand-link" href="/" aria-label="Back to home">
+            <span class="brand-mark">∫</span>
+            <span class="brand-name">Interpretable ML</span>
+          </a>
+        </div>
+        <nav class="top-nav" aria-label="Breadcrumb">
+          <a class="nav-link" href="/">Home</a>
+          <a class="nav-link" href="/methods-descriptions">Methods</a>
+          <a class="nav-link" href="/instructions">Instructions</a>
+          <span class="crumb">/</span>
+          <span class="nav-link current">Counterfactual + PPI Local</span>
+        </nav>
+      </div>
+    </header>
+
+    <main id="content" class="site-main">
+      <section class="container">
+        <h1 class="page-title">Configure Counterfactual Explanation with Per-point importance</h1>
+
+        <form id="cf-pfi-form" class="form" novalidate>
+          <input type="hidden" name="method_name" value="counterfactual_with_pfi" />
+
+          <fieldset class="panel">
+            <legend>Labels</legend>
+            <div class="grid two">
+              <div class="field">
+                <label for="variate_labels">Variate labels <span class="hint">optional, comma-separated</span></label>
+                <input id="variate_labels" name="variate_labels" type="text" placeholder="e.g. Lead I, Lead II" />
+              </div>
+              <div class="field">
+                <label for="class_labels">Class labels <span class="hint">optional, comma-separated</span></label>
+                <input id="class_labels" name="class_labels" type="text" placeholder="e.g. Normal, AF" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="panel">
+            <legend>Instances Configuration</legend>
+            <div class="grid two">
+              <div class="field">
+                <label for="instances_variates">Variates <span class="hint">optional</span></label>
+                <input id="instances_variates" name="instances_config.variates" type="number" inputmode="numeric" min="0" step="1" placeholder="e.g. 2" />
+              </div>
+              <div class="field required">
+                <label for="instances_timesteps">Timesteps <span class="req">required</span></label>
+                <input id="instances_timesteps" name="instances_config.timesteps" type="number" inputmode="numeric" min="1" step="1" required placeholder="e.g. 1" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="panel">
+            <legend>Model Configuration</legend>
+            <div class="grid three">
+              <div class="field required">
+                <label for="model_batch_size">Batch size <span class="req">required</span></label>
+                <input id="model_batch_size" name="model_config.batch_size" type="number" inputmode="numeric" min="1" step="1" value="16" required />
+              </div>
+              <div class="field required">
+                <label for="model_verbose">Verbose <span class="req">required</span></label>
+                <input id="model_verbose" name="model_config.verbose" type="number" inputmode="numeric" min="0" step="1" value="1" required />
+              </div>
+              <div class="field required">
+                <label for="model_compile">Compile <span class="req">required</span></label>
+                <select id="model_compile" name="model_config.compile" required>
+                  <option value="" disabled selected>Select...</option>
+                  <option value="true">true</option>
+                  <option value="false">false</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid two">
+              <div class="field">
+                <label for="model_loss">Loss <span class="hint">optional</span></label>
+                <input id="model_loss" name="model_config.loss" type="text" placeholder="e.g. categorical_crossentropy" />
+              </div>
+              <div class="field">
+                <label for="model_optimizer">Optimizer <span class="hint">optional</span></label>
+                <input id="model_optimizer" name="model_config.optimizer" type="text" placeholder="e.g. Adam" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="panel">
+            <legend>Counterfactual Explanation Configuration</legend>
+            <div class="grid three">
+              <div class="field required">
+                <label for="cf_ce_type">Type <span class="req">required</span></label>
+                <select id="cf_ce_type" name="method_config.ce_type" required>
+                  <option value="" disabled selected>Select...</option>
+                  <option value="ecg">ECG</option>
+                  <option value="with_slices">With Slices</option>
+                  <option value="general">General</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="cf_n_slices">Number of slices <span class="hint">optional</span></label>
+                <input id="cf_n_slices" name="method_config.n_slices" type="number" inputmode="numeric" min="1" step="1" placeholder="e.g. 60" />
+              </div>
+              <div class="field">
+                <label for="cf_sampling_rate">Sampling rate <span class="hint">optional</span></label>
+                <input id="cf_sampling_rate" name="method_config.sampling_rate" type="number" inputmode="numeric" min="1" step="1" placeholder="e.g. 400" />
+              </div>
+            </div>
+            <div class="grid three">
+              <div class="field">
+                <label for="cf_max_range">Maximum range <span class="hint">optional</span></label>
+                <input id="cf_max_range" name="method_config.max_range" type="number" step="any" placeholder="e.g. 0.5" />
+              </div>
+              <div class="field required">
+                <label for="cf_pop_size">Population size <span class="req">required</span></label>
+                <input id="cf_pop_size" name="method_config.pop_size" type="number" inputmode="numeric" min="1" step="1" required value="10" />
+              </div>
+              <div class="field required">
+                <label for="cf_n_generations">Number of generations <span class="req">required</span></label>
+                <input id="cf_n_generations" name="method_config.n_generations" type="number" inputmode="numeric" min="1" step="1" required value="10" />
+              </div>
+            </div>
+            <div class="grid three">
+              <div class="field">
+                <label for="cf_min_fitness">Minimum fitness <span class="hint">optional</span></label>
+                <input id="cf_min_fitness" name="method_config.min_fitness" type="number" step="any" placeholder="e.g. 120.5" />
+              </div>
+              <div class="field required">
+                <label for="cf_prob_crossover">Crossover probability <span class="req">required</span></label>
+                <input id="cf_prob_crossover" name="method_config.prob_crossover" type="number" step="any" min="0" max="1" required placeholder="e.g. 0.9" />
+              </div>
+              <div class="field required">
+                <label for="cf_prob_mutation">Mutation probability <span class="req">required</span></label>
+                <input id="cf_prob_mutation" name="method_config.prob_mutation" type="number" step="any" min="0" max="1" required placeholder="e.g. 0.1" />
+              </div>
+            </div>
+            <div class="grid three">
+              <div class="field required">
+                <label for="cf_prob_change_piece">Change piece probability <span class="req">required</span></label>
+                <input id="cf_prob_change_piece" name="method_config.prob_change_piece" type="number" step="any" min="0" max="1" required value="0.25" />
+              </div>
+              <div class="field required">
+                <label for="cf_tournament_size">Tournament size <span class="req">required</span></label>
+                <input id="cf_tournament_size" name="method_config.tournament_size" type="number" inputmode="numeric" min="1" step="1" required value="3" />
+              </div>
+              <div class="field">
+                <label for="cf_label_idx">Label index <span class="hint">optional</span></label>
+                <input id="cf_label_idx" name="method_config.label_idx" type="number" inputmode="numeric" min="0" step="1" placeholder="e.g. 1" />
+              </div>
+            </div>
+            <div class="grid three">
+              <div class="field required">
+                <label for="cf_max_retries">Maximum retries <span class="req">required</span></label>
+                <input id="cf_max_retries" name="method_config.max_retries" type="number" inputmode="numeric" min="1" step="1" required value="5" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="panel">
+            <legend>PPI Local Configuration</legend>
+            <div class="grid one">
+              <div class="field required">
+                <label for="pfilocal_max_range">Maximum range <span class="req">required</span></label>
+                <input id="pfilocal_max_range" name="method_config.max_range" type="number" step="any" required placeholder="e.g. 0.5" />
+                <div class="hint">Maximum additive perturbation applied to each point when computing per-point PPI.</div>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="actions">
+            <a class="button ghost" href="/">Back</a>
+            <button type="submit" class="button">Continue</button>
+          </div>
+        </form>
+
+        <details class="panel preview" id="preview">
+          <summary>Preview payload (client-side only)</summary>
+          <pre id="preview-json" class="code"></pre>
+        </details>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="year"></span> Interpretable ML</p>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      function formToConfig(form) {
+        const data = new FormData(form);
+        const config = {
+          method_name: 'counterfactual_with_pfi',
+          variate_labels: null,
+          class_labels: null,
+          instances_config: {},
+          model_config: {},
+          method_config: {},
+        };
+
+        for (const [key, value] of data.entries()) {
+          if (key === 'variate_labels') {
+            config.variate_labels = value === '' ? null : value.split(',').map(s => s.trim()).filter(Boolean);
+          } else if (key === 'class_labels') {
+            config.class_labels = value === '' ? null : value.split(',').map(s => s.trim()).filter(Boolean);
+          } else if (key.startsWith('instances_config.')) {
+            const k = key.replace('instances_config.', '');
+            config.instances_config[k] = coerceNumber(value);
+          } else if (key.startsWith('model_config.')) {
+            const k = key.replace('model_config.', '');
+            config.model_config[k] = k === 'compile' ? (value === 'true') : coerceNumberOrString(value);
+          } else if (key.startsWith('method_config.')) {
+            const k = key.replace('method_config.', '');
+            config.method_config[k] = coerceNumber(value);
+          }
+        }
+
+        // Ensure optional presence
+        if (!('variates' in config.instances_config)) config.instances_config.variates = null;
+        if (!('loss' in config.model_config)) config.model_config.loss = null;
+        if (!('optimizer' in config.model_config)) config.model_config.optimizer = null;
+        // Counterfactual keys
+        const mc = config.method_config;
+        if (!('n_slices' in mc)) mc.n_slices = null;
+        if (!('sampling_rate' in mc)) mc.sampling_rate = null;
+        if (!('max_range' in mc)) mc.max_range = null;
+        if (!('min_fitness' in mc)) mc.min_fitness = null;
+        if (!('label_idx' in mc)) mc.label_idx = null;
+
+        return config;
+      }
+
+      function coerceNumber(v) {
+        if (v === '') return null;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : v;
+      }
+      function coerceNumberOrString(v) {
+        if (v === '') return null;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : v;
+      }
+
+      // Dynamic toggles for counterfactual config
+      const cfTypeEl = document.getElementById('cf_ce_type');
+      const cfNSlices = document.getElementById('cf_n_slices');
+      const cfSampling = document.getElementById('cf_sampling_rate');
+      const cfMaxRange = document.getElementById('cf_max_range');
+
+      function setFieldState(input, enabled, makeRequired) {
+        if (!input) return;
+        input.disabled = !enabled;
+        input.required = !!makeRequired;
+        if (!enabled) input.value = '';
+      }
+
+      function updateCfRequirements() {
+        const t = cfTypeEl.value;
+        setFieldState(cfNSlices, t === 'with_slices', t === 'with_slices');
+        setFieldState(cfSampling, t === 'ecg', t === 'ecg');
+        setFieldState(cfMaxRange, t === 'general', t === 'general');
+      }
+
+      cfTypeEl.addEventListener('change', () => { updateCfRequirements(); updatePreview(); });
+
+      const form = document.getElementById('cf-pfi-form');
+      const previewPre = document.getElementById('preview-json');
+      const updatePreview = () => { const cfg = formToConfig(form); previewPre.textContent = JSON.stringify(cfg, null, 2); };
+
+      form.addEventListener('input', updatePreview);
+      form.addEventListener('change', updatePreview);
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const cfg = formToConfig(form);
+        try { localStorage.setItem('input_config', JSON.stringify(cfg)); } catch (e) {}
+        try {
+          const res = await fetch('/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(cfg) });
+          if (!res.ok) { const err = await res.json().catch(()=>({})); alert('Failed to save configuration: ' + (err.message || res.statusText)); return; }
+        } catch (err) { alert('Network error while saving configuration.'); return; }
+        window.location.href = '/run/setup?method=counterfactual_with_pfi';
+      });
+
+      // Initialize
+      updateCfRequirements();
+      updatePreview();
+    </script>
+  </body>
+</html>

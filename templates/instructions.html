@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>How to use — Interpretable ML</title>
+    <meta name="description" content="Instructions and tips to run explanations with the Interpretable ML demo." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/home.css" />
+    <link rel="stylesheet" href="/static/css/form.css" />
+    <style>
+      .lead { margin-top: 6px; color: var(--muted); }
+      .how-grid { display: grid; gap: 18px; grid-template-columns: 1fr; }
+      .note {
+        background: linear-gradient(180deg, var(--panel-2), var(--panel));
+        border-left: 3px solid var(--accent);
+        padding: 12px 14px;
+        color: var(--text);
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(3,8,20,0.35);
+      }
+      pre.cmd { background:#111; color:#eee; padding:10px;border-radius:6px; overflow:auto }
+      ul.check { margin: 8px 0 0 20px; }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <a class="brand-link" href="/" aria-label="Back to home">
+            <span class="brand-mark">∫</span>
+            <span class="brand-name">Interpretable ML</span>
+          </a>
+        </div>
+        <nav class="top-nav" aria-label="Primary">
+          <a class="nav-link" href="/methods-descriptions">Methods details</a>
+          <a class="nav-link" href="/instructions">User guide</a>
+          <a class="nav-link" href="#about">About us</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="content" class="site-main">
+      <section class="container">
+        <h1 class="page-title">How to use this demo</h1>
+        <p class="lead">Short guide to upload data, configure a method, run explanations and inspect the generated plots.</p>
+
+        <div class="how-grid">
+          <article class="panel">
+            <h3>1) Pick a method</h3>
+            <p>From the home page choose one of the available methods (Global Surrogate, Per-point importance, Counterfactual Explanations, Counterfactual + PFI, or LIME).</p>
+          </article>
+
+          <article class="panel">
+            <h3>2) Configure the method</h3>
+            <p>For each method, there are the <b>Labels</b>, <b>Instances Configuration</b> and <b>Model Configuration</b> sections to fill out.</p>
+            <h4>Labels:</h4>
+            <ul>
+              <li><strong>Variate labels</strong> (optional): comma-separated names for each variate/lead in your data (e.g. <code>Lead I, Lead II, Lead III</code>). The names should match the order of variates in your dataset, they will be used in plots and explanations to help interpret results.</li>
+              <li><strong>Class labels</strong> (optional): comma-separated names for each class in your model (e.g. <code>Normal, AFib, Other</code>). The names should match the order of classes in your model, they will be used in plots and explanations to help interpret results.</li>
+            </ul>
+            <h4>Instances Configuration:</h4>
+            <ul>
+              <li><strong>Variates</strong> (required if you have more than one variate in your time series): index of the variates in the shape of your dataset.</li>
+              <li><strong>Timesteps</strong> (required): index of the timesteps in the shape of your dataset.</li>
+            </ul>
+            <p class="note">For example, if your dataset has the shape <code>(1000, 4096, 12)</code>, then the index 0 would point to the <code>1000</code> samples, 1 would point to the <code>4096</code> timesteps, and 2 to the <code>12</code> variates. That way, you should put 2 for <b>Variates</b> and 1 for <b>Timesteps</b>.</p>
+            <h4>Model Configuration:</h4>
+            <p>For this section, provide the necessary model-specific parameters and settings. If you do not know what to put, consult your model documentation or support resources.</p>
+            <h4>Method Configuration:</h4>
+            <p>Each method has its own specific configuration options detailed below. The <b>Global Surrogate</b> method is the only one that does not have additional configuration options beyond those listed above.</p>
+            <h4>Per-point importance:</h4>
+            <ul>
+              <li><strong>Maximum range</strong> (required): the maximum range for perturbations in the per-point importance method.</li>
+            </ul>
+            <p class="note">The methods below have the parameter "type" which allows you to select between different variations of the method (<code>ECG</code>, <code>With Slices</code>, or <code>General</code>). The <code>ECG</code> type create perturbations based on ECG characteristics, the <code>With Slices</code> type creates perturbations using slices of the time series, and the <code>General</code> type creates general perturbations without specific domain knowledge.</p>
+            <h4>Counterfactual Explanations:</h4>
+            <ul>
+              <li><strong>Counterfactual Explanations type</strong> (required): select the type of counterfactual explanation you want to generate (<code>ECG</code>, <code>With Slices</code>, or <code>General</code>).</li>
+              <li><strong>Number of slices</strong> (optional): the number of slices to use if the <code>With Slices</code> type is selected.</li>
+              <li><strong>Sampling rate</strong> (optional): the sampling rate to use if the <code>ECG</code> type is selected.</li>
+              <li><strong>Maximum range</strong> (optional): the maximum range for perturbations if the <code>General</code> type is selected.</li>
+              <li><strong>Population size</strong> (required): the size of the population for the genetic algorithm.</li>
+              <li><strong>Number of generations</strong> (required): the number of generations to run the genetic algorithm.</li>
+              <li><strong>Minimum fitness</strong> (optional): the minimum fitness threshold for early stopping in the genetic algorithm.</li>
+              <li><strong>Crossover probability</strong> (required): the probability for crossover in the genetic algorithm.</li>
+              <li><strong>Mutation probability</strong> (required): the probability for mutation in the genetic algorithm.</li>
+              <li><strong>Tournament size</strong> (required): the size of the tournament for selection in the genetic algorithm.</li>
+              <li><strong>Maximum retries</strong> (required): the maximum number of retries for the genetic algorithm in case it fails to find a suitable solution.</li>
+            </ul>
+            <h4>LIME:</h4>
+            <ul>
+              <li><strong>LIME type</strong> (required): select the type of LIME explanation you want to generate (<code>ECG</code>, <code>With Slices</code>, or <code>General</code>).</li>
+              <li><strong>Number of slices</strong> (optional): the number of slices to use if the <code>With Slices</code> type is selected.</li>
+              <li><strong>Sampling rate</strong> (optional): the sampling rate to use if the <code>ECG</code> type is selected.</li>
+              <li><strong>Maximum range</strong> (optional): the maximum range for perturbations if the <code>General</code> type is selected.</li>
+              <li><strong>Number of samples</strong> (required): the number of samples to generate to train the LIME model.</li>
+              <li><strong>Percentage of top features</strong> (required): the percentage of top features to highlight in the LIME explanation.</li>
+              <li><strong>Kernel width</strong> (required): the kernel width parameter for the LIME explanation.</li>
+            </ul>
+          </article>
+
+          <article class="panel">
+            <h3>3) Provide data and model</h3>
+            <p>On the <strong>Provide data</strong> page you must upload:</p>
+            <ul>
+              <li><strong>Instances</strong> (required): an HDF5 file (.hdf5 / .h5) containing a dataset with the instances array. The instances must be already preprocessed and ready to use with the model.</li>
+              <li><strong>Dataset Name</strong> (required): name of the dataset inside the HDF5 file that contains the instances array.</li>
+              <li><strong>Instance Index</strong> (required if you are not using the Global Surrogate method): the index of the instance to explain within the dataset.</li>
+              <li><strong>Model</strong> (required): the model saved in the HDF5 format.</li>
+              <li><strong>Ground truth</strong> (required for counterfactual explanations): a CSV file containing the ground truth labels for the instances. The indexes must match the instances.</li>
+            </ul>
+          </article>
+
+          <article class="panel">
+            <h3>4) Run and wait</h3>
+            <p>When you submit the run the server will create the explanation and plot files. A loading overlay appears while processing.</p>
+          </article>
+
+          <article class="panel">
+            <h3>5) View results</h3>
+            <p>After the run you'll be forwarded to the <strong>Results</strong> page where generated plots are shown as thumbnails. Click any image to open a zoomable lightbox with pan and download options.</p>
+          </article>
+
+          <article class="panel">
+            <h3>Troubleshooting & FAQ</h3>
+            <ul>
+              <li>If the server returns a validation error about missing fields, double-check the method page for required parameters (they're enabled when needed).</li>
+              <li>HDF5 dataset not found? Ensure the <em>Dataset Name</em> matches the dataset inside your file (e.g. <code>tracings</code>), HDF5 files can contain groups — provide the full path if needed.</li>
+              <li>Large runs time out in low-resource environments — reduce population/generations or LIME sample size for testing.</li>
+            </ul>
+          </article>
+
+          <article class="panel">
+            <h3>Contact & contribution</h3>
+            <p>If you have issues or want to contribute, open an issue in the repository or email the maintainer. Contributions that add tests, improve input validation, or namespace plot outputs per-run are especially welcome.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="year"></span> Interpretable ML</p>
+      </div>
+    </footer>
+
+    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  </body>
+</html>

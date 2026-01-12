@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Provide Data — Interpretable ML</title>
+    <meta name="description" content="Upload instances, model and optional ground truth to run the chosen interpretability method." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/home.css" />
+    <link rel="stylesheet" href="/static/css/form.css" />
+    <style>
+      /* Extra breathing room between grid rows on this page only */
+      #run-form .grid + .grid { margin-top: 18px; }
+
+      /* Loading overlay */
+      #run-overlay { position: fixed; inset: 0; display: none; z-index: 1000; }
+      #run-overlay[aria-hidden="false"] { display: grid; place-items: center; }
+      #run-overlay .backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(2px); }
+      #run-overlay .panel { position: relative; z-index: 1; width: min(520px, 92vw); text-align: center; }
+      .spinner { width: 42px; height: 42px; border: 4px solid rgba(255,255,255,0.2); border-top-color: var(--accent); border-radius: 50%; margin: 6px auto 10px; animation: spin 0.9s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .muted { color: var(--muted); font-size: 14px; }
+      .running .button[type="submit"], .running button[type="submit"] { opacity: 0.75; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <a class="brand-link" href="/" aria-label="Back to home">
+            <span class="brand-mark">∫</span>
+            <span class="brand-name">Interpretable ML</span>
+          </a>
+        </div>
+        <nav class="top-nav" aria-label="Breadcrumb">
+          <a class="nav-link" href="/">Home</a>
+          <span class="crumb">/</span>
+          <span class="nav-link current">Provide Data</span>
+        </nav>
+      </div>
+    </header>
+
+    <main id="content" class="site-main">
+      <section class="container">
+        <h1 class="page-title">Provide data and model</h1>
+        <p class="page-sub">Upload the required files for the selected method. Ground truth is only required for Counterfactual Explanations.</p>
+
+        <div class="panel" id="method-pill" style="margin-bottom:12px">
+          <strong>Selected method:</strong> <span id="method-name"></span>
+        </div>
+
+        <form id="run-form" class="form" novalidate>
+          <fieldset class="panel">
+            <legend>Files</legend>
+            <div class="grid three">
+              <div class="field required">
+                <label for="instances_file">Instances (.hdf5) <span class="req">required</span></label>
+                <input id="instances_file" name="instances_file" type="file" accept=".hdf5" required />
+                <div class="hint">Expected format: HDF5 array with instances.</div>
+              </div>
+              <div class="field">
+                <label for="dataset_name">Dataset Name <span class="hint">defaults to "tracings"</span></label>
+                <input id="dataset_name" name="dataset_name" type="text" value="tracings" placeholder="e.g. tracings" />
+                <div class="hint">Name of the dataset inside the HDF5 file to load as instances.</div>
+              </div>
+              <div class="field required">
+                <label for="instance_idx">Instance Index <span class="req">required</span></label>
+                <input id="instance_idx" name="instance_idx" type="number" inputmode="numeric" min="0" step="1" value="0" required />
+                <div class="hint">Index of the instance to be used in the explanation.</div>
+              </div>
+            </div>
+            <div class="grid two">
+              <div class="field required">
+                <label for="model_file">Model (.hdf5) <span class="req">required</span></label>
+                <input id="model_file" name="model_file" type="file" accept=".hdf5" required />
+                <div class="hint">Keras/TensorFlow model file.</div>
+              </div>
+              <div class="field">
+                <label for="ground_truth_file">Ground truth (.csv) <span id="gt-required" class="hint">optional (required for Counterfactual Explanations)</span></label>
+                <input id="ground_truth_file" name="ground_truth_file" type="file" accept=".csv" />
+                <div class="hint">CSV with labels aligned to instances.</div>
+              </div>
+            </div>
+          </fieldset>
+
+            <div class="actions">
+              <a class="button ghost" href="#" id="back-button">Back</a>
+              <button type="submit" class="button">Run Explanation</button>
+            </div>
+        </form>
+
+        <details class="panel preview" id="preview">
+          <summary>Preview payload (client-side only)</summary>
+          <pre id="preview-json" class="code"></pre>
+        </details>
+      </section>
+    </main>
+
+    <!-- Loading overlay shown while processing the explanation -->
+    <div id="run-overlay" aria-hidden="true" aria-label="Explanation is running">
+      <div class="backdrop"></div>
+      <div class="panel">
+        <div class="spinner" role="progressbar" aria-label="Running"></div>
+        <h3 style="margin:6px 0 4px;">Running explanation…</h3>
+        <p class="muted">This can take a while depending on your model, data and method. Please wait.</p>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="year"></span> Interpretable ML</p>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // Read method from server-provided data attribute or URL param fallback
+      const params = new URLSearchParams(window.location.search);
+      const method = document.body.getAttribute('data-method') || params.get('method') || 'lime';
+      const methodNameEl = document.getElementById('method-name');
+      methodNameEl.textContent = method;
+
+      // Ground truth requirement for counterfactuals
+      const gtInput = document.getElementById('ground_truth_file');
+      const gtRequiredLabel = document.getElementById('gt-required');
+      function updateGtRequirement() {
+        const cfMethods = ['counterfactual_explanations', 'counterfactual_with_pfi'];
+        const required = cfMethods.includes(method);
+        gtInput.required = required;
+        gtRequiredLabel.textContent = required ? 'required for Counterfactual Explanations' : 'optional (required for Counterfactual Explanations)';
+      }
+      updateGtRequirement();
+
+      // Load previously saved input_config from localStorage
+      function getSavedConfig() {
+        try {
+          const raw = localStorage.getItem('input_config');
+          if (!raw) return null;
+          return JSON.parse(raw);
+        } catch (e) { return null; }
+      }
+
+      // Validate file extensions explicitly
+      function hasExt(file, ext) {
+        if (!file) return false;
+        return file.name.toLowerCase().endsWith(ext);
+      }
+
+      const form = document.getElementById('run-form');
+      const previewPre = document.getElementById('preview-json');
+  const overlay = document.getElementById('run-overlay');
+      function updatePreview() {
+        const config = getSavedConfig() || {};
+        const instancesFile = document.getElementById('instances_file').files[0]?.name || null;
+        const datasetName = document.getElementById('dataset_name').value || 'tracings';
+        const instanceIdx = Number(document.getElementById('instance_idx').value || 0);
+        const modelFile = document.getElementById('model_file').files[0]?.name || null;
+        const gtFile = document.getElementById('ground_truth_file').files[0]?.name || null;
+
+        const preview = {
+          method,
+          input_config: config,
+          files: {
+            instances: instancesFile,
+            model: modelFile,
+            ground_truth: gtFile,
+          },
+          instance_idx: instanceIdx,
+          dataset_name: datasetName,
+          note: 'Files are not included in this preview; only names are shown.'
+        };
+        previewPre.textContent = JSON.stringify(preview, null, 2);
+      }
+
+      form.addEventListener('input', updatePreview);
+      form.addEventListener('change', updatePreview);
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        // Basic client-side checks for required files and extensions
+        const inst = document.getElementById('instances_file').files[0];
+        const datasetName = document.getElementById('dataset_name').value || 'tracings';
+        const instanceIdx = document.getElementById('instance_idx').value || '0';
+        const mdl = document.getElementById('model_file').files[0];
+        const gt = document.getElementById('ground_truth_file').files[0];
+        const gtReq = method === 'counterfactual_explanations';
+
+        if (!inst || !(hasExt(inst, '.hdf5') || hasExt(inst, '.h5'))) { alert('Please select a valid .hdf5 instances file.'); return; }
+        if (!mdl || !(hasExt(mdl, '.hdf5') || hasExt(mdl, '.h5'))) { alert('Please select a valid .hdf5 model file.'); return; }
+        if (gtReq && (!gt || !hasExt(gt, '.csv'))) { alert('Please select a valid .csv ground truth file.'); return; }
+
+        // Build multipart form for /explain
+        const fd = new FormData();
+        fd.append('instances_file', inst);
+        // Model is collected here for future use; backend may ignore it for now
+        fd.append('model_file', mdl);
+        if (gt) fd.append('ground_truth_file', gt);
+        fd.append('instance_idx', String(instanceIdx));
+        fd.append('dataset_name', datasetName);
+
+        // Send to backend
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('running');
+        let result = null;
+        try {
+          const res = await fetch('/explain', {
+            method: 'POST',
+            body: fd,
+            credentials: 'same-origin'
+          });
+          result = await res.json().catch(() => ({ status: 'error', message: 'Invalid JSON in response' }));
+          if (!res.ok) {
+            alert('Run failed: ' + (result.message || res.statusText));
+          }
+        } catch (err) {
+          alert('Network error while calling /explain.');
+          overlay.setAttribute('aria-hidden', 'true');
+          document.body.classList.remove('running');
+          return;
+        }
+
+        // Update preview with server response
+        updatePreview();
+        const panel = document.getElementById('preview');
+        const extra = {
+          explain_result: result
+        };
+        const prev = JSON.parse(document.getElementById('preview-json').textContent || '{}');
+        document.getElementById('preview-json').textContent = JSON.stringify({ ...prev, ...extra }, null, 2);
+        panel.open = true;
+        window.scrollTo({ top: panel.offsetTop - 24, behavior: 'smooth' });
+
+        // If success, forward user to results page to view plots
+        if (result && result.status === 'success') {
+          overlay.setAttribute('aria-hidden', 'true');
+          document.body.classList.remove('running');
+          window.location.href = '/results';
+        }
+        else {
+          overlay.setAttribute('aria-hidden', 'true');
+          document.body.classList.remove('running');
+        }
+      });
+
+      // Initialize
+      updatePreview();
+
+      // Persist/restore non-file run form state so user doesn't lose inputs when navigating back.
+      const backBtn = document.getElementById('back-button');
+      const stateKey = 'run_setup_state';
+
+      function readState() {
+        try { const raw = localStorage.getItem(stateKey); return raw ? JSON.parse(raw) : {}; } catch(e) { return {}; }
+      }
+      function writeState(obj) {
+        try { localStorage.setItem(stateKey, JSON.stringify(obj)); } catch(e) {}
+      }
+
+      function restoreState() {
+        const s = readState();
+        if (s.dataset_name) document.getElementById('dataset_name').value = s.dataset_name;
+        if (typeof s.instance_idx !== 'undefined') document.getElementById('instance_idx').value = s.instance_idx;
+        if (s.method) {
+          // keep method param in URL when returning
+        }
+        updatePreview();
+      }
+
+      backBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Save non-file fields
+        const state = {
+          dataset_name: document.getElementById('dataset_name').value || 'tracings',
+          instance_idx: document.getElementById('instance_idx').value || '0',
+          method: method
+        };
+        writeState(state);
+        // Navigate back to the method configuration page
+        if (method === 'lime') {
+          window.location.href = '/methods/lime';
+        } else if (method === 'counterfactual_explanations') {
+          window.location.href = '/methods/counterfactual-explanations';
+        } else if (method === 'counterfactual_with_pfi') {
+          window.location.href = '/methods/counterfactual-with-pfi';
+        } else if (method === 'global_surrogate') {
+          window.location.href = '/methods/global-surrogate';
+        } else {
+          window.history.back();
+        }
+      });
+
+      // Restore any previous run setup values when the page loads
+      restoreState();
+    </script>
+  </body>
+</html>

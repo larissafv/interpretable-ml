@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Methods — Interpretable ML</title>
+    <meta name="description" content="Descriptions of the explanation methods available in this demo." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/home.css" />
+    <link rel="stylesheet" href="/static/css/form.css" />
+    <style>
+      .lead { margin-top: 6px; color: var(--muted); }
+      .methods { display: grid; gap: 18px; grid-template-columns: 1fr; }
+      .method-summary { display:flex; gap:14px; align-items:flex-start }
+      .method-summary h3 { margin:0 0 6px 0 }
+      .kbd { background:#f3f4f6; border-radius:4px; padding:2px 6px; font-family:monospace }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <a class="brand-link" href="/" aria-label="Back to home">
+            <span class="brand-mark">∫</span>
+            <span class="brand-name">Interpretable ML</span>
+          </a>
+        </div>
+        <nav class="top-nav" aria-label="Primary">
+          <a class="nav-link" href="/methods-descriptions">Methods details</a>
+          <a class="nav-link" href="/instructions">User guide</a>
+          <a class="nav-link" href="#about">About us</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="content" class="site-main">
+      <section class="container">
+        <h1 class="page-title">Explanation methods (overview)</h1>
+        <p class="lead">Short, user-friendly descriptions of each method available in the demo. Read more about the methods in the book: <a href="https://christophm.github.io/interpretable-ml-book/" target="_blank" rel="noopener noreferrer">Interpretable Machine Learning</a>.</p>
+
+        <div class="methods">
+          <article class="panel">
+            <div class="method-summary">
+              <div style="flex:1">
+                <h3>Global Surrogate</h3>
+                <p>A global surrogate model is an interpretable model that is trained to approximate the predictions of a black box model. We can draw conclusions about the black box model by interpreting the surrogate model.</p>
+                <p>Training a surrogate model is a model-agnostic method, since it does not require any information about the inner workings of the black box model, only access to data and the prediction function is necessary. If the underlying machine learning model was replaced with another, you could still use the surrogate method. The choice of the black box model type and of the surrogate model type is decoupled.</p>
+                <p>You have to be aware that you draw conclusions about the model and not about the data, since the surrogate model never sees the real outcome.</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="method-summary">
+              <div style="flex:1">
+                <h3>Per-point importance</h3>
+                <p>Per-point importance computes local importance scores by perturbing individual timepoints (or small groups/slices) of a single instance and measuring the change in the model's prediction. This is useful to obtain high-resolution, pointwise explanations for time-series inputs.</p>
+                <p>The method systematically alters each timepoint (or slice) of the input sequence, replacing it with a baseline value. After each perturbation, the model's prediction is recorded. The importance of each timepoint is then quantified based on how much the prediction changes compared to the original unperturbed input.</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="method-summary">
+              <div style="flex:1">
+                <h3>Counterfactual Explanations</h3>
+                <p>A counterfactual explanation describes a causal situation in the form: “If X had not occurred, Y would not have occurred.” Thinking in counterfactuals requires imagining a hypothetical reality that contradicts the observed facts, hence the name “counterfactual.”</p>
+                <p>In interpretable machine learning, counterfactual explanations can be used to explain predictions of individual instances. The relationship between the inputs and the prediction is very simple: The feature values cause the prediction. Even if in reality the relationship between the inputs and the outcome to be predicted might not be causal, we can see the inputs of a model as the cause of the prediction.</p>
+                <p>So, we can change the feature values of an instance before making the predictions and analyze how the prediction changes. We’re interested in scenarios in which the prediction changes in a relevant way, like a flip in predicted class, or in which the prediction reaches a certain threshold. A counterfactual explanation of a prediction describes the smallest change to the feature values that changes the prediction to a predefined output.</p>
+                <p>Counterfactuals are human-friendly explanations because they are contrastive to the current instance and because they are selective, meaning they usually focus on a small number of feature changes. But counterfactuals suffer from the ‘Rashomon effect.’ Rashomon is a Japanese movie in which the murder of a Samurai is told by different people. Each of the stories explains the outcome equally well, but the stories contradict each other. The same can also happen with counterfactuals, since there are usually multiple different counterfactual explanations. Each counterfactual tells a different “story” of how a certain outcome was reached. One counterfactual might say to change feature A, the other counterfactual might say to leave A the same but change feature B, which is a contradiction. This issue of multiple truths can be addressed either by reporting all counterfactual explanations or by having a criterion to evaluate counterfactuals and select the best one.</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="method-summary">
+              <div style="flex:1">
+                <h3>Counterfactual Explanation with Per-point importance</h3>
+                <p>This hybrid flow combines counterfactual search with per-point importance to produce counterfactuals faster. Use per-point importance to prioritise or constrain candidate edits and obtain more interpretable, sparse counterfactuals.</p>
+                <p>First, per-point importance is computed for the instance to be explained. The importance scores are then used to prioritise edits to the most important timepoints (or slices) when searching for counterfactuals. Alternatively, the importance scores can be used to constrain the search to only edit timepoints (or slices) with high importance, resulting in sparser counterfactuals.</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="method-summary">
+              <div style="flex:1">
+                <h3>LIME (Local Interpretable Model-agnostic Explanations)</h3>
+                <p>Local surrogate models are interpretable models that are used to explain individual predictions of black box machine learning models. Local interpretable model-agnostic explanations (LIME) is an approach for fitting surrogate models. Surrogate models are trained to approximate the predictions of the underlying black box model.</p>
+                <p>LIME tests what happens to the predictions when you give variations of your data into the machine learning model. LIME generates a new dataset consisting of perturbed samples and the corresponding predictions of the black box model. On this new dataset, LIME then trains an interpretable model, which is weighted by the proximity of the sampled instances to the instance of interest.</p>
+                <p>Even if you replace the underlying machine learning model, you can still use the same local, interpretable model for explanation. But a problem is the instability of the explanations. In an article, the authors showed that the explanations of two very close points varied greatly in a simulated setting.</p>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="year"></span> Interpretable ML</p>
+      </div>
+    </footer>
+    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  </body>
+</html>
